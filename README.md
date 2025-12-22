@@ -40,6 +40,6 @@ dandi download DANDI:000128/0.220113.0400
 
 统计不同任务，各个通道的放电情况：
 
-![](.\attachment\heatmap.png)
+![](attachment/heatmap.png)
 
 可见数据还是比较好的，做不同任务时，基本放电特征一样。
