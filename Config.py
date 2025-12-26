@@ -13,15 +13,15 @@ class my_POSSMConfig(PretrainedConfig):
             dropout: float = 0.0,
             hidden_act: str = 'silu', # core component of SwiGLU
             embed_dim: int = 64, # the dimension of word'set embedding vector
-            hidden_size: int = 128,
+            hidden_size: int = 512,
             
             intermediate_size: int = None,
             vocab_size: int = 182,
 
             # attention
             num_learable_q = 1, 
-            num_attention_heads: int = 8,  
-            num_key_value_heads: int = 2,
+            num_attention_heads: int = 1,  
+            num_key_value_heads: int = 1,
             flash_attn: bool = False,
 
             # gru

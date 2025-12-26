@@ -2,14 +2,19 @@ from Config import my_POSSMConfig
 config = my_POSSMConfig()
 
 from tqdm import tqdm
-from Dataloder import get_dataloader
+from Dataloader import get_dataloader
 from Model import my_POSSM
 import torch
 from torch.utils.tensorboard import SummaryWriter
 
+import json
+meta_data = json.load(open("processed_data/meta_data.json", "r"))
+VEL_MEAN = torch.tensor(meta_data["vel_mean"], dtype=torch.float32)
+VEL_STD = torch.tensor(meta_data["vel_std"], dtype=torch.float32)
+
 hyperparam = {
     "seed": 42,
-    "batch_size": 32,
+    "batch_size": 256,
     "num_epochs": 10,
     "learning_rate": 0.001,
     "device": "cuda" if torch.cuda.is_available() else "cpu",
@@ -65,6 +70,8 @@ def masked_mse_loss(output, target, lengths):
 
 def train_one_epoch(model, loader, optimizer, criterion, device, writer, epoch):
     model.train()
+    mean_tensor = VEL_MEAN.to(device)
+    std_tensor = VEL_STD.to(device)
     running_loss = 0.0
     
     pbar = tqdm(loader, desc=f"Epoch {epoch}", leave=True)
@@ -75,8 +82,8 @@ def train_one_epoch(model, loader, optimizer, criterion, device, writer, epoch):
 
         optimizer.zero_grad()
         outputs = model(spike, mask_spike, lengths_spike)
-        
-        loss = criterion(outputs, vel, lengths_vel)
+        normalized_vel = (vel - mean_tensor) / std_tensor
+        loss = criterion(outputs, normalized_vel, lengths_vel)
         loss.backward()
         # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
@@ -93,6 +100,8 @@ def train_one_epoch(model, loader, optimizer, criterion, device, writer, epoch):
 @torch.no_grad()
 def validate(model, loader, criterion, device, writer, epoch):
     model.eval()
+    mean_tensor = VEL_MEAN.to(device)
+    std_tensor = VEL_STD.to(device)
     running_loss = 0.0
     
     # 注意：这里 loader 返回的数据解包要和 dataset 对应，
@@ -103,7 +112,8 @@ def validate(model, loader, criterion, device, writer, epoch):
         lengths_vel = lengths_vel.to(device)
         
         outputs = model(spike, mask_spike, lengths_spike)
-        loss = criterion(outputs, vel, lengths_vel) # 使用同样的 masked_mse_loss
+        normalized_vel = (vel - mean_tensor) / std_tensor
+        loss = criterion(outputs, normalized_vel, lengths_vel) # 使用同样的 masked_mse_loss
         
         running_loss += loss.item()
         
