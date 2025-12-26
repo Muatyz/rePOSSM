@@ -13,6 +13,7 @@ dependencies = [
     "torch==2.5.1",
     "transformers>=4.57.3",
     "tensorboard>=2.20.0",
+    "dandi>=0.74.0",
 ]
 
 [tool.uv]
