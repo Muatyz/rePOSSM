@@ -16,7 +16,7 @@ dependencies = [
     "dandi>=0.74.0",
 ]
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "ipykernel",
 ]

@@ -17,6 +17,7 @@ hyperparam = {
     "batch_size": 256,
     "num_epochs": 30,
     "learning_rate": 0.001,
+    "weight_decay": 0.01,
     "device": "cuda" if torch.cuda.is_available() else "cpu",
     "log_dir": "./log",
 }
@@ -132,7 +133,7 @@ def main():
     train_loader, valid_loader = get_dataloader()
     model = my_POSSM(config).to(hyperparam['device'])
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=hyperparam['learning_rate'], momentum=0.9) 
+    optimizer = torch.optim.AdamW(model.parameters(), lr=hyperparam['learning_rate'], weight_decay=hyperparam['weight_decay'])
     criterion = masked_mse_loss
 
     for epoch in range(hyperparam['num_epochs']):
