@@ -15,7 +15,7 @@ VEL_STD = torch.tensor(meta_data["vel_std"], dtype=torch.float32)
 hyperparam = {
     "seed": 42,
     "batch_size": 256,
-    "num_epochs": 10,
+    "num_epochs": 30,
     "learning_rate": 0.001,
     "device": "cuda" if torch.cuda.is_available() else "cpu",
     "log_dir": "./log",
@@ -130,7 +130,7 @@ def main():
 
     set_seed(hyperparam['seed'])
     train_loader, valid_loader = get_dataloader()
-    model = my_POSSM(config)
+    model = my_POSSM(config).to(hyperparam['device'])
 
     optimizer = torch.optim.SGD(model.parameters(), lr=hyperparam['learning_rate'], momentum=0.9) 
     criterion = masked_mse_loss
