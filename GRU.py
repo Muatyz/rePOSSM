@@ -32,11 +32,11 @@ class POSSM_Backbone_GRU(nn.Module):
         Args:
             z_t: 来自 Input Cross-Attention 的潜在向量。
                  Shape: (batch_size, max_bin, num_latents, embed_dim)
-            bin_mask: 布尔掩码，标识每个序列的有效位置。
-                Shape: (batch_size, max_bin)，True表示有效位置，False表示padding
+            bin_mask: 布尔掩码, 标识每个序列的有效位置。
+                Shape: (batch_size, max_bin), True表示有效位置, False表示padding
             h_prev: 上一时刻的隐藏状态。
                     Shape: (num_layers, Batch, hidden_dim)
-                    如果是序列开始，可以为 None (默认为全0)。
+                    如果是序列开始, 可以为 None (默认为全0)。
         
         Returns:
             output: GRU 所有时间步的输出 (Batch, max_bin, hidden_dim)
@@ -46,15 +46,24 @@ class POSSM_Backbone_GRU(nn.Module):
         z_t = z_t.view(batch_size, max_bin, -1)
         
         # 从 bin_mask 计算每个序列的实际长度
-        # bin_mask: (batch_size, max_bin)，对每个序列求和得到有效长度
+        # bin_mask: (batch_size, max_bin), 对每个序列求和得到有效长度
         lengths = bin_mask.sum(dim=1)  # Shape: (batch_size,)
         lengths_cpu = lengths.cpu().to(torch.int64)
         
-        # 使用 pack_padded_sequence 处理变长序列，提高计算效率
-        packed_input = pack_padded_sequence(z_t, lengths_cpu, batch_first=True, enforce_sorted=False)
+        # 使用 pack_padded_sequence 处理变长序列, 提高计算效率
+        packed_input = pack_padded_sequence(
+            z_t, 
+            lengths_cpu, 
+            batch_first = True, 
+            enforce_sorted = False
+            )
         output, _ = self.gru(packed_input, h_prev)
         
-        # 将打包的输出重新填充为固定长度，便于后续处理
-        output_padded, _ = pad_packed_sequence(output, batch_first=True, total_length=max_bin)
+        # 将打包的输出重新填充为固定长度, 便于后续处理
+        output_padded, _ = pad_packed_sequence(
+            output, 
+            batch_first = True, 
+            total_length = max_bin
+            )
         
         return output_padded

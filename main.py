@@ -40,28 +40,17 @@ def set_seed(seed):
 
 def masked_mse_loss(output, target, lengths):
     """
+    计算 masked MSE loss. 
     Args:
         output: (batch_size, max_time_length, 2)
         target: (batch_size, max_time_length, 2)
         lengths: (batch_size) - 存储每个样本的有效长度
     """
-    # 1. 生成基础掩码 (batch_size, max_time_length)
     batch_size, max_time, dim = output.shape
     device = output.device
-    
-    # torch.arange(max_time) 生成 [0, 1, 2, ..., max_time-1]
-    # 利用广播机制与 lengths 比较
     mask = torch.arange(max_time, device=device).expand(batch_size, max_time) < lengths.unsqueeze(1)
-    
-    # 2. 将掩码扩展到特征维度 (batch_size, max_time_length, 2)
-    # 增加最后一个维度并复制
     mask = mask.unsqueeze(-1).expand_as(output)
-    
-    # 3. 计算平方损失
     squared_diff = (output - target) ** 2
-    
-    # 4. 应用掩码并求平均
-    # 只计算 mask 为 True 的部分的均值
     masked_squared_diff = squared_diff * mask.float()
     num_valid_elements = mask.sum()
     
@@ -70,6 +59,9 @@ def masked_mse_loss(output, target, lengths):
 
 
 def train_one_epoch(model, loader, optimizer, criterion, device, writer, epoch):
+    '''
+    单次 epoch 训练
+    '''
     model.train()
     mean_tensor = VEL_MEAN.to(device)
     std_tensor = VEL_STD.to(device)
@@ -128,20 +120,22 @@ def validate(model, loader, criterion, device, writer, epoch):
     
     return val_loss
 
-
-
 def main():
     writer = SummaryWriter(log_dir=hyperparam['log_dir'])
 
     set_seed(hyperparam['seed'])
-    train_loader, valid_loader = get_dataloader()
+    train_loader, valid_loader = get_dataloader() # 获得训练集和验证集
     model = my_POSSM(config).to(hyperparam['device'])
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=hyperparam['learning_rate'], weight_decay=hyperparam['weight_decay'])
+    optimizer = torch.optim.AdamW(
+        model.parameters(), 
+        lr = hyperparam['learning_rate'], 
+        weight_decay = hyperparam['weight_decay'])
     criterion = masked_mse_loss
 
     for epoch in range(hyperparam['num_epochs']):
         train_loss = train_one_epoch(model, train_loader, optimizer, criterion, hyperparam['device'], writer, epoch)
+        
         val_loss = validate(model, valid_loader, criterion, hyperparam['device'], writer, epoch)
 
         print(f'Epoch {epoch+1}/{hyperparam["num_epochs"]}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')

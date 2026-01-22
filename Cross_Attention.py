@@ -7,7 +7,9 @@ from typing import Optional, Tuple
 from RoPE import RotaryEmbedding
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
-    """torch.repeat_interleave(x, dim=2, repeats=n_rep)"""
+    '''
+    将 Key, Value 的 head 数复制从而与 Query 对齐
+    '''
     batch_size, max_bin, max_token, num_key_value_heads, head_dim = x.shape
     if n_rep == 1:
         return x

@@ -5,7 +5,7 @@ class my_POSSMConfig(PretrainedConfig):
 
     def __init__(
             self,
-            time_lag =80, # kinematics data lag 80ms relative to neural data
+            time_lag = 80, # kinematics data lag 80ms relative to neural data
             bin_size = 50,
             num_latents = 1, # number of latent queries
 
@@ -24,9 +24,15 @@ class my_POSSMConfig(PretrainedConfig):
             num_key_value_heads: int = 1,
             flash_attn: bool = False,
 
-            # gru
+            # gru params
             gru_hidden_size: int = 512,
             gru_num_layers: int = 1,
+            
+            # s4d params
+            s4_hidden_size: int = 512,
+            s4_d_state: int = 64,
+            s4_d_num_layers: int = 1,
+            s4_dropout: float = 0.0, # 先跟随全局 dropout
             
             # output decoder
             k_history: int = 3,
@@ -58,6 +64,11 @@ class my_POSSMConfig(PretrainedConfig):
 
         self.gru_hidden_size = gru_hidden_size
         self.gru_num_layers = gru_num_layers
+        
+        self.s4_hidden_size = s4_hidden_size
+        self.s4_d_state = s4_d_state
+        self.s4_d_num_layers = s4_d_num_layers
+        self.s4_dropout = s4_dropout
 
         self.k_history = k_history
 
