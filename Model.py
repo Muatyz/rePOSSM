@@ -10,7 +10,7 @@ import json
 meta_data = json.load(open("processed_data/meta_data.json", "r"))
 max_time_length = meta_data["max_time_length"]
   
-# from GRU import POSSM_Backbone_GRU
+from GRU import POSSM_Backbone_GRU
 from S4D import POSSM_Backbone_S4D
 from Output_Decoder import POSSMOutputDecoder
 
@@ -30,16 +30,24 @@ class my_POSSM(nn.Module):
             )
         
         self.Cross_Attention = POSSMCrossAttention(config)
-        # self.gru = POSSM_Backbone_GRU(
-        #     config.num_latents * config.embed_dim, 
-        #     config.gru_hidden_size, 
-        #     config.gru_num_layers, 
-        #     config.dropout)
-        self.s4d = POSSM_Backbone_S4D(
-            config.num_latents * config.embed_dim, 
-            config.s4_hidden_size, 
-            config.s4_d_num_layers, 
-            config.s4_dropout)
+        
+        # 根据需求选取不同的 Backbone: GRU/S4D/Mamba
+        if config.backbone == "gru":
+            self.backbone = POSSM_Backbone_GRU(
+                config.num_latents * config.embed_dim, 
+                config.gru_hidden_size, 
+                config.gru_num_layers, 
+                config.dropout)
+        elif config.backbone == "s4d":
+            self.backbone = POSSM_Backbone_S4D(
+                config.num_latents * config.embed_dim, 
+                config.s4d_hidden_size, 
+                config.s4d_num_layers, 
+                config.s4d_dropout)
+        elif config.backbone == "mamba":
+            print("等待完善")
+            return 0
+        
         freqs_cos, freqs_sin = RotaryEmbedding.precompute_freqs_cis(
             config.hidden_size // config.num_attention_heads, 
             config.bin_size, config.rope_theta
@@ -66,7 +74,8 @@ class my_POSSM(nn.Module):
         channels, offsets = spike[..., 0], spike[..., 1]
         emb = self.emb(channels) # (batch, max_bin, max_token, embed_dim)
         z = self.Cross_Attention(emb, offsets, spike_mask, self.freqs_cos, self.freqs_sin) # (batch_size, max_bin, num_latents, embed_dim)
-        # h = self.gru(z, bin_mask) # h: (batch_size, max_bin, hidden_dim)
-        h = self.s4d(z, bin_mask) # h: (batch_size, max_bin, hidden_dim)
+        
+        # 根据 config 内设定的 backbone 参数进行隐藏层的计算
+        h = self.backbone(z, bin_mask) # h: (batch_size, max_bin, hidden_dim)
         vel_pred = self.output_decoder(h, self.freqs_cos, self.freqs_sin) # (batch_size, (max_bin+k-1) * bin_size, 2)
         return vel_pred

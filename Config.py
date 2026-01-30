@@ -23,16 +23,19 @@ class my_POSSMConfig(PretrainedConfig):
             num_attention_heads: int = 1,  
             num_key_value_heads: int = 1,
             flash_attn: bool = False,
+            
+            # model backbone type
+            backbone: str = "s4d",
 
             # gru params
             gru_hidden_size: int = 512,
             gru_num_layers: int = 1,
             
             # s4d params
-            s4_hidden_size: int = 512,
-            s4_d_state: int = 64,
-            s4_d_num_layers: int = 1,
-            s4_dropout: float = 0.0, # 先跟随全局 dropout
+            s4d_hidden_size: int = 512,
+            s4d_state: int = 64,
+            s4d_num_layers: int = 1,
+            s4d_dropout: float = 0.0, # 先跟随全局 dropout
             
             # output decoder
             k_history: int = 3,
@@ -61,14 +64,16 @@ class my_POSSMConfig(PretrainedConfig):
         self.num_attention_heads = num_attention_heads
         self.num_key_value_heads = num_key_value_heads
         self.flash_attn = flash_attn
+        
+        self.backbone = backbone
 
         self.gru_hidden_size = gru_hidden_size
         self.gru_num_layers = gru_num_layers
         
-        self.s4_hidden_size = s4_hidden_size
-        self.s4_d_state = s4_d_state
-        self.s4_d_num_layers = s4_d_num_layers
-        self.s4_dropout = s4_dropout
+        self.s4d_hidden_size = s4d_hidden_size
+        self.s4d_state = s4d_state
+        self.s4d_num_layers = s4d_num_layers
+        self.s4d_dropout = s4d_dropout
 
         self.k_history = k_history
 

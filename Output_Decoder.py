@@ -21,7 +21,10 @@ def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
 class POSSMOutputDecoder(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.input_size = config.gru_hidden_size  # Backbone 输出维度
+        if config.backbone == "gru":
+            self.input_size = config.gru_hidden_size  # Backbone 输出维度
+        elif config.backbone == "s4d":
+            self.input_size = config.s4d_hidden_size  # Backbone 输出维度
         self.embed_dim = config.embed_dim
         self.hidden_size = config.hidden_size
         self.num_attention_heads = config.num_attention_heads
@@ -45,6 +48,7 @@ class POSSMOutputDecoder(nn.Module):
         self.output_queries = nn.Parameter(torch.randn(self.bin_size, self.embed_dim))
         
         # Readout Head: 映射到行为变量 (例如 2D 速度)
+        # 通过线性层进行读出
         self.readout = nn.Linear(self.embed_dim, 2) 
 
         self.dropout = nn.Dropout(config.dropout)

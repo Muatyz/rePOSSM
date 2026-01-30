@@ -255,19 +255,21 @@ def pad_collate_fn(batch):
     return padded_bin, bin_mask, spike_mask, vel, vel_lens
 
 
-def get_dataloader(data_dir="processed_data/sliced_trials.pt", batch_size=16, n_workers=0):
+def get_dataloader(batch_size = 16, data_dir="processed_data/sliced_trials.pt", n_workers=0):
     '''
     Generate dataloader
     
     Args:
-        data_dir: 数据路径, "processed_data/sliced_trials.pt"
         batch_size: 批量大小
+        data_dir: 数据路径, "processed_data/sliced_trials.pt"
         n_workers: DataLoader 的子进程数量
     
     Returns:
         train_loader: 训练集 DataLoader
         valid_loader: 验证集 DataLoader
     '''
+    # 确认 batch_size 参数是否真的传入
+    assert batch_size is not None
     
     dataset = my_dataset(data_dir)
     # 以 my_dataset 类加载数据集

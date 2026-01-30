@@ -1,146 +1,109 @@
-from Config import my_POSSMConfig
-config = my_POSSMConfig()
+# main.py
+# 省略实验细节, 只进行宏观函数使用
 
-from tqdm import tqdm
-from Dataloader import get_dataloader
-from Model import max_time_length, my_POSSM
-import torch
-from torch.utils.tensorboard import SummaryWriter
-
-import json
-meta_data = json.load(open("processed_data/meta_data.json", "r"))
-VEL_MEAN = torch.tensor(meta_data["vel_mean"], dtype=torch.float32)
-VEL_STD = torch.tensor(meta_data["vel_std"], dtype=torch.float32)
-
-hyperparam = {
-    "seed": 42,
-    "batch_size": 256,
-    "num_epochs": 30,
-    "learning_rate": 0.001,
-    "weight_decay": 0.01,
-    "device": "cuda" if torch.cuda.is_available() else "cpu",
-    "log_dir": "./log",
-}
-
-import numpy as np
-import random
 import os
+import torch
+import argparse
+from pathlib import Path
 
-def set_seed(seed):
-    """set the seed"""
-    np.random.seed(seed)
-    random.seed(seed)
-    torch.manual_seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(seed)
-        torch.cuda.manual_seed_all(seed)
-    torch.backends.cudnn.benchmark = False
-    torch.backends.cudnn.deterministic = True
+from Config import my_POSSMConfig
+from train import run_experiment
+from evaluate import evaluate
+from plotting import (
+    plot_loss_curve,
+    plot_velocity_timecourse,
+)
 
-def masked_mse_loss(output, target, lengths):
-    """
-    计算 masked MSE loss. 
-    Args:
-        output: (batch_size, max_time_length, 2)
-        target: (batch_size, max_time_length, 2)
-        lengths: (batch_size) - 存储每个样本的有效长度
-    """
-    batch_size, max_time, dim = output.shape
-    device = output.device
-    mask = torch.arange(max_time, device=device).expand(batch_size, max_time) < lengths.unsqueeze(1)
-    mask = mask.unsqueeze(-1).expand_as(output)
-    squared_diff = (output - target) ** 2
-    masked_squared_diff = squared_diff * mask.float()
-    num_valid_elements = mask.sum()
-    
-    loss = masked_squared_diff.sum() / num_valid_elements
-    return loss
-
-
-def train_one_epoch(model, loader, optimizer, criterion, device, writer, epoch):
-    '''
-    单次 epoch 训练
-    '''
-    model.train()
-    mean_tensor = VEL_MEAN.to(device)
-    std_tensor = VEL_STD.to(device)
-    running_loss = 0.0
-    
-    pbar = tqdm(loader, desc=f"Epoch {epoch}", leave=True)
-    for spike, bin_mask, spike_mask, vel, vel_lens in pbar:
-        spike, bin_mask, spike_mask, vel, vel_lens = spike.to(device), bin_mask.to(device), spike_mask.to(device), vel.to(device), vel_lens.to(device)
-        vel_lens = vel_lens - (config.k_history-1)*config.bin_size
-        max_time_length = vel_lens.max()
-
-        optimizer.zero_grad()
-        outputs = model(spike, bin_mask, spike_mask)
-        outputs = outputs[:, :max_time_length, :] # (batch_size, max_time_length-(config.k_history-1)*config.bin_size, 2)
-        normalized_vel = (vel - mean_tensor) / std_tensor
-        tru_norm_vel = normalized_vel[:, (config.k_history-1)*config.bin_size:, :]
-        loss = criterion(outputs, tru_norm_vel, vel_lens)
-        loss.backward()
-        # torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-        optimizer.step()
-        
-        running_loss += loss.item()
-        
-    epoch_loss = running_loss / len(loader)
-    
-    # 写入 TensorBoard
-    writer.add_scalar('Loss/Train', epoch_loss, epoch)
-    
-    return epoch_loss
-
-@torch.no_grad()
-def validate(model, loader, criterion, device, writer, epoch):
-    model.eval()
-    mean_tensor = VEL_MEAN.to(device)
-    std_tensor = VEL_STD.to(device)
-    running_loss = 0.0
-    
-    # 注意：这里 loader 返回的数据解包要和 dataset 对应，
-    # 你的 dataset 似乎返回 5 个值，这里需要全部接收
-    for spike, bin_mask, spike_mask, vel, vel_lens in tqdm(loader, desc=f"Validating", leave=True):
-        spike, bin_mask, spike_mask, vel, vel_lens = spike.to(device), bin_mask.to(device), spike_mask.to(device), vel.to(device), vel_lens.to(device)
-        vel_lens = vel_lens - (config.k_history-1)*config.bin_size
-        max_time_length = vel_lens.max()
-        
-        outputs = model(spike, bin_mask, spike_mask)
-        outputs = outputs[:, :max_time_length, :] # (batch_size, max_time_length-(config.k_history-1)*config.bin_size, 2)
-        norm_vel = (vel - mean_tensor) / std_tensor
-        tru_norm_vel = norm_vel[:, (config.k_history-1)*config.bin_size:, :]
-        loss = criterion(outputs, tru_norm_vel, vel_lens) # 使用同样的 masked_mse_loss
-        
-        running_loss += loss.item()
-        
-    val_loss = running_loss / len(loader)
-    
-    writer.add_scalar('Loss/Valid', val_loss, epoch)
-    
-    return val_loss
 
 def main():
-    writer = SummaryWriter(log_dir=hyperparam['log_dir'])
+    # 等待进一步传参
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--train", action = "store_true")
+    parser.add_argument("--eval", action = "store_true")
+    parser.add_argument("--backbone", type=str, default = "s4d")
+    parser.add_argument("--seed", type=int, default = 42)
+    args = parser.parse_args()
+    
+    # 1. 引入 config 参数
+    config = my_POSSMConfig()
+    config.backbone = args.backbone # 选取 backbone 参数, 目前支持 gru/s4d
+    
+    # 2. 设定模型存储路径
+    ckpt_dir = Path("checkpoints")
+    ckpt_dir.mkdir(exist_ok = True)
 
-    set_seed(hyperparam['seed'])
-    train_loader, valid_loader = get_dataloader() # 获得训练集和验证集
-    model = my_POSSM(config).to(hyperparam['device'])
-
-    optimizer = torch.optim.AdamW(
-        model.parameters(), 
-        lr = hyperparam['learning_rate'], 
-        weight_decay = hyperparam['weight_decay'])
-    criterion = masked_mse_loss
-
-    for epoch in range(hyperparam['num_epochs']):
-        train_loss = train_one_epoch(model, train_loader, optimizer, criterion, hyperparam['device'], writer, epoch)
+    ckpt_path = ckpt_dir / f"possm_{config.backbone}_seed{args.seed}.pt"
+    eval_dir = Path("eval") / f"{config.backbone}_seed{args.seed}"
+    eval_dir.mkdir(parents = True, exist_ok = True)
+    
+    # 3. 根据传参, 决定训练或者评估模型
+    print("=" * 60)
+    print(f"Running POSSM with backbone = {config.backbone}")
+    print(f"Checkpoint path: {ckpt_path}")
+    print("=" * 60)
+    
+    # 全局超参数
+    hyperparam = {
+            "seed": args.seed,
+            "batch_size": 32,  # 原设定为 256, 但是会显存不足, 正在排查原因中
+            "num_epochs": 20,
+            "learning_rate": 1e-3,
+            "weight_decay": 1e-2,
+            "device": "cuda" if torch.cuda.is_available() else "cpu",
+            "log_dir": f"./log/{config.backbone}",
+        }
+    # ============ Train ==============
+    if args.train:
+        run_experiment(
+            config = config,
+            hyperparam = hyperparam,
+            ckpt_path = str(ckpt_path)
+        )
         
-        val_loss = validate(model, valid_loader, criterion, hyperparam['device'], writer, epoch)
+    
+    # ========= Evaluate / Plot ===========
+    if args.eval:
+        from train import build_model_and_dataloader
+        
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        model, val_loader = build_model_and_dataloader(
+            config=config,
+            ckpt_path=str(ckpt_path),
+            device=device,
+            batch_size = hyperparam["batch_size"],
+        )
+        
+        metrics = evaluate(
+            model = model,
+            dataloader = val_loader,
+            device = device,
+            save_dir = eval_dir,
+            split = "val",
+        )
+    
+        print("Evaluation metrics:")
+        for k, v in metrics.items():
+            print(f"  {k}: {v}")
 
-        print(f'Epoch {epoch+1}/{hyperparam["num_epochs"]}, Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}')
+        # -------------------------------------------------
+        # plotting (from saved files)
+        # -------------------------------------------------
+        ckpt = torch.load(ckpt_path, map_location="cpu")
+        plot_loss_curve(
+            ckpt["train_loss"],
+            ckpt["val_loss"],
+            title=f"{config.backbone.upper()} Loss",
+            save_path=eval_dir / "loss_curve.png",
+        )
 
-
+        data = torch.load(eval_dir / "eval_val.pt")
+        plot_velocity_timecourse(
+            data["vel_pred"][0],
+            data["vel_true"][0],
+            title=f"{config.backbone.upper()} Velocity Decoding",
+            save_path=eval_dir / "velocity_example.png",
+        )
+    
 
 if __name__ == "__main__":
     main()
