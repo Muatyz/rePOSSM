@@ -5,10 +5,6 @@ from RoPE import RotaryEmbedding
 
 from Config import my_POSSMConfig
 config = my_POSSMConfig()
-
-import json
-meta_data = json.load(open("processed_data/meta_data.json", "r"))
-max_time_length = meta_data["max_time_length"]
   
 from GRU import POSSM_Backbone_GRU
 from S4D import POSSM_Backbone_S4D

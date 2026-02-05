@@ -14,7 +14,9 @@ import os
 os.makedirs("processed_data", exist_ok=True)
 
 # Load dataset
-dataset = NWBDataset("./000128/sub-Jenkins/", "*train", split_heldout=False)
+# dataset = NWBDataset("./000128/sub-Jenkins/", "*train", split_heldout=False) # 旧数据集
+dataset = NWBDataset("./long_term_data/sub-Monkey-N_ses-20200127_ecephys.nwb", "*train", split_heldout=False) # 长期数据集
+save_path = "long_term_data/processed_data_0127"
 
 channel_ids = dataset.data['spikes'].keys()
 # 读取数据集中原始电极/通道的 id 列表
@@ -30,7 +32,7 @@ def spike_slice_bins(input):
     # time_length: 实验时间长度
     # num_channel: 信号通道数(神经元个数), 182
     
-    active_spike = [0]*(time_length//config.bin_size + 1)
+    active_spike = [0]*int(np.ceil(time_length / config.bin_size))
     # 初始化列表, 长度为所有 bin 的数量, 预先填充 0. 
 
     time_idxs, chan_idxs = np.nonzero(input)
@@ -114,7 +116,7 @@ for index, row in tqdm(dataset.trial_info.iterrows()):
     valid_mask = ~spikes_has_nan & ~vel_has_nan
     # 取 "非 spike_nan" 与 "非 vel_nan" 的交集, 作为有效(valid) 时间索引. 其被称为 "掩码"(mask)
 
-    spikes = s_vals[valid_mask] # shape: [time_length, channels]
+    spikes = s_vals[valid_mask] # shape: [[(cid, offset), (cid, offset), ...], [(cid, offset), (cid, offset), ...], ...]
     vel = v_vals[valid_mask] # shape: [time_length, 2] i.e. [[x, y], [x, y], ...]
     # 通过有效时间点筛选出 s_vals 和 v_vals 中的有效数据
     
@@ -148,7 +150,7 @@ for index, row in tqdm(dataset.trial_info.iterrows()):
     max_token = max(max_token, trial_max_token)
     max_time_length = max(max_time_length, len(vel))
 
-torch.save(sliced_trials, "processed_data/sliced_trials.pt")
+torch.save(sliced_trials, f"{save_path}/sliced_trials.pt")
 
 # =================【计算统计量】=================
 # 1. 收集所有 trial 的 velocity 数据
@@ -181,5 +183,5 @@ meta_data = {
     "vel_std": vel_std.tolist()    # [std_x, std_y]
 }
 
-with open("processed_data/meta_data.json", "w") as f:
+with open(f"{save_path}/meta_data.json", "w") as f:
     json.dump(meta_data, f, indent=4)

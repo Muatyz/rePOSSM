@@ -131,7 +131,7 @@ def pad_collate_fn(batch):
     # ])
     # 将 trial 并行处理, 即 trial 数作为 batch size(维度) 
 
-    tensor_unfold_spikes = [torch.tensor(x) for x in new_unfold_spikes]
+    tensor_unfold_spikes = [x.clone().detach() if isinstance(x, torch.Tensor) else torch.tensor(x) for x in new_unfold_spikes]
     # new_unfold_spikes 是去除 trial 边界的 List[bin], 且将 0 替换为 torch.empty(0, 2) 便于维数的统一
     # 通过 torch.tensor() 将所有 bin 转换为 tensor() 格式
     
