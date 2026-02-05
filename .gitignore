@@ -12,3 +12,10 @@ wheels/
 # dataset
 000128/
 processed_data/
+
+# experiment ouputs
+checkpoints/
+graphs/
+logs/
+*.pt
+*.png

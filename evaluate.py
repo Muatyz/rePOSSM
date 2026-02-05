@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 import json
+from typing import Optional
 
 from metrics import mse_loss, r2_score
 
@@ -15,7 +16,7 @@ def evaluate(
     device,
     save_dir,
     split: str = "val",
-    max_batches: int = None,
+    max_batches: Optional[int] = None,
 ):
     """
     Args:
