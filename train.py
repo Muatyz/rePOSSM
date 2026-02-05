@@ -8,7 +8,11 @@ from Model import my_POSSM
 from engine import train_one_epoch, validate, masked_mse_loss
 from utils import set_seed, save_checkpoint
 from Config import my_POSSMConfig
+import json
 
+meta_data = json.load(open("processed_data/meta_data.json", "r"))
+VEL_MEAN = torch.tensor(meta_data["vel_mean"], dtype=torch.float32)
+VEL_STD = torch.tensor(meta_data["vel_std"], dtype=torch.float32)
 
 def run_experiment(config, hyperparam, ckpt_path):
     set_seed(hyperparam["seed"])
@@ -19,8 +23,12 @@ def run_experiment(config, hyperparam, ckpt_path):
     train_loader, valid_loader = get_dataloader(
         batch_size = hyperparam["batch_size"]
     )
+    num_channel = meta_data["num_channel"]
 
-    model = my_POSSM(config).to(hyperparam["device"])
+    model = my_POSSM(
+        config, 
+        num_channel = num_channel
+        ).to(hyperparam["device"])
 
     optimizer = torch.optim.AdamW(
         model.parameters(),
@@ -58,11 +66,10 @@ def run_experiment(config, hyperparam, ckpt_path):
 
     return train_losses, val_losses
 
+def build_model_and_dataloader(config, ckpt_path, device, batch_size):
     '''
     工具函数, 用于快速使用 dataloader
     '''
-
-def build_model_and_dataloader(config, ckpt_path, device, batch_size):
     model = my_POSSM(config).to(device)
 
     ckpt = torch.load(ckpt_path, map_location=device)

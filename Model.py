@@ -9,10 +9,13 @@ config = my_POSSMConfig()
 from GRU import POSSM_Backbone_GRU
 from S4D import POSSM_Backbone_S4D
 from Output_Decoder import POSSMOutputDecoder
+import json
+
+meta_data = json.load(open("processed_data/meta_data.json", "r"))
 
 
 class my_POSSM(nn.Module):
-    def __init__(self, config):
+    def __init__(self, config, num_channel):
         '''
         初始化 my_POSSM 模型
         '''
@@ -21,7 +24,7 @@ class my_POSSM(nn.Module):
         # 通过 UnitEmb(i) 将 各个 channel 映射为一个 embed_dim 维的矢量
         # 总共有 num_embeddings 个 channel
         self.emb = nn.Embedding(
-            num_embeddings = meta_data["num_channel"], 
+            num_embeddings = num_channel, 
             embedding_dim = config.embed_dim
             )
         
