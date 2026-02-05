@@ -1,5 +1,6 @@
 # main.py
 # 省略实验细节, 只进行宏观函数使用
+# 用法示例: python main.py --train --backbone gru
 
 import os
 import torch

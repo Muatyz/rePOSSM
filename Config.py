@@ -23,9 +23,6 @@ class my_POSSMConfig(PretrainedConfig):
             num_attention_heads: int = 1,  
             num_key_value_heads: int = 1,
             flash_attn: bool = False,
-            
-            # model backbone type
-            backbone: str = "s4d",
 
             # gru params
             gru_hidden_size: int = 512,
@@ -64,8 +61,6 @@ class my_POSSMConfig(PretrainedConfig):
         self.num_attention_heads = num_attention_heads
         self.num_key_value_heads = num_key_value_heads
         self.flash_attn = flash_attn
-        
-        self.backbone = backbone
 
         self.gru_hidden_size = gru_hidden_size
         self.gru_num_layers = gru_num_layers
