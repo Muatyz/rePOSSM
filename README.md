@@ -138,3 +138,34 @@ Session    | R2 (Avg)   | R2 (X)     | R2 (Y)     | MSE
 11         | 0.0361     | 0.0037     | 0.0685     | 0.0527    
 ==================================================
 ```
+
+```bash
+(possm) hyc@Dominant:/mnt/d/codefiles/python/myPOSSM/rePOSSM$ python -m train.main --eval --backbone s4d
+============================================================
+Running POSSM with backbone = s4d
+Model is saved at: ./checkpoints/long_term_model_s4d.pt
+============================================================
+Using device: cuda
+Loading model from ./checkpoints/long_term_model_s4d.pt...
+Training Baseline (Session 0) Loaded.
+--------------------------------------------------
+Evaluating Session 0... R2: 0.3388 (MSE: 0.0469)
+Evaluating Session 1... R2: 0.1464 (MSE: 0.0404)
+Evaluating Session 2... R2: -0.0129 (MSE: 0.0495)
+Evaluating Session 3... R2: 0.0188 (MSE: 0.0671)
+Evaluating Session 4... R2: -1.3658 (MSE: 0.1198)
+Evaluating Session 7... R2: 0.0684 (MSE: 0.0471)
+Evaluating Session 11... R2: -2.3554 (MSE: 0.1833)
+
+==================================================
+Session    | R2 (Avg)   | R2 (X)     | R2 (Y)     | MSE       
+--------------------------------------------------
+0          | 0.3388     | 0.2287     | 0.4489     | 0.0469    
+1          | 0.1464     | 0.1703     | 0.1225     | 0.0404    
+2          | -0.0129    | -0.2974    | 0.2717     | 0.0495    
+3          | 0.0188     | -0.1006    | 0.1381     | 0.0671    
+4          | -1.3658    | -0.8307    | -1.9008    | 0.1198    
+7          | 0.0684     | -0.0101    | 0.1469     | 0.0471    
+11         | -2.3554    | -2.4705    | -2.2404    | 0.1833    
+==================================================
+```

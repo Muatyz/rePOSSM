@@ -15,22 +15,18 @@ processed_data/
 long_term_data/
 
 # model
-long_term_model.pth
+/checkpoints/
 
 # log
-log/
-long_term_log/
+/log/
+/long_term_log/
 
 # wait to write
 Mamba.py
 # S4D.py
 
 # experiment ouputs
-checkpoints/
 graphs/
-logs/
-*.pt
-*.png
 
 # 数据文件
 /data/
