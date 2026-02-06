@@ -2,9 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import math
-from RoPE import RotaryEmbedding
+from possm.models.RoPE import RotaryEmbedding
 
-from Config import my_POSSMConfig
+from possm.config.Config import my_POSSMConfig
 config = my_POSSMConfig()
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:

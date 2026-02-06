@@ -31,3 +31,6 @@ graphs/
 logs/
 *.pt
 *.png
+
+# 数据文件
+/data/

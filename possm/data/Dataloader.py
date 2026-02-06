@@ -3,13 +3,14 @@ from itertools import chain, islice
 import torch
 from torch.utils.data import Dataset, DataLoader, random_split
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
+import os
 
 import json
-meta_data = json.load(open("processed_data/meta_data.json", "r"))
-# 读取 meta_data.json 中的数据
+# meta_data = json.load(open("processed_data/meta_data.json", "r"))
+# # 读取 meta_data.json 中的数据
 
-max_bin = meta_data["max_bin"]
-max_token = meta_data["max_token"]
+# max_bin = meta_data["max_bin"]
+# max_token = meta_data["max_token"]
 # max_bin: 所有 trial 中最大的 bin 数量
 # max_token: 切分后一个 bin 中最大的 spikes 数量
 
@@ -255,13 +256,13 @@ def pad_collate_fn(batch):
     return padded_bin, bin_mask, spike_mask, vel, vel_lens
 
 
-def get_dataloader(batch_size = 16, data_dir="processed_data/sliced_trials.pt", n_workers=0):
+def get_dataloader(batch_size = 16, data_dir = "processed_data/sliced_trials.pt", n_workers=0):
     '''
     Generate dataloader
     
     Args:
         batch_size: 批量大小
-        data_dir: 数据路径, "processed_data/sliced_trials.pt"
+        data_dir: 数据路径, 例如 "processed_data/sliced_trials.pt"
         n_workers: DataLoader 的子进程数量
     
     Returns:
@@ -292,9 +293,35 @@ def get_dataloader(batch_size = 16, data_dir="processed_data/sliced_trials.pt", 
         validset,
         batch_size = batch_size,
         num_workers = n_workers,
-        drop_last = True,
+        drop_last = False, # 避免长度不足从而使 valid_loader 空
         pin_memory = True,
         collate_fn = pad_collate_fn,
     )
 
     return train_loader, valid_loader
+
+def get_inference_dataloader(
+    data_path, 
+    batch_size=4, 
+    n_workers=0
+    ):
+    """
+    在不切分数据集的情况下初始化一个 dataloader 用于推理. 
+    Creates a dataloader for the entire dataset without splitting 
+    (since we are doing inference on a distinct session).
+    """
+    if not os.path.exists(data_path):
+        print(f"Warning: File not found {data_path}")
+        return None
+    
+    dataset = my_dataset(data_path)
+    loader = DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=False, # No need to shuffle for inference
+        num_workers=n_workers,
+        drop_last=False, # Keep all data
+        pin_memory=True,
+        collate_fn=pad_collate_fn,
+    )
+    return loader

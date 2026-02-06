@@ -1,17 +1,14 @@
 import torch
 import torch.nn as nn
-from Cross_Attention import POSSMCrossAttention
-from RoPE import RotaryEmbedding
+from possm.models.Cross_Attention import POSSMCrossAttention
+from possm.models.RoPE import RotaryEmbedding
 
-from Config import my_POSSMConfig
+from possm.config.Config import my_POSSMConfig
 config = my_POSSMConfig()
   
-from GRU import POSSM_Backbone_GRU
-from S4D import POSSM_Backbone_S4D
-from Output_Decoder import POSSMOutputDecoder
-import json
-
-meta_data = json.load(open("processed_data/meta_data.json", "r"))
+from possm.models.GRU import POSSM_Backbone_GRU
+from possm.models.S4D import POSSM_Backbone_S4D
+from possm.models.Output_Decoder import POSSMOutputDecoder
 
 
 class my_POSSM(nn.Module):

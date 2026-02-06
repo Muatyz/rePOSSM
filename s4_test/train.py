@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from model import S4DToy
+from possm.models.Model import S4DToy
 from data import make_delay_data
 
 # hyperparams

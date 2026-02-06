@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import math
 from typing import Optional, Tuple
 
-from RoPE import RotaryEmbedding
+from possm.models.RoPE import RotaryEmbedding
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
     '''
