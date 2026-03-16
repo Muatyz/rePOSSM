@@ -10,9 +10,7 @@ wheels/
 .venv
 
 # dataset
-000128/
-processed_data/
-long_term_data/
+/data/dataset/
 
 # model
 /checkpoints/
@@ -23,10 +21,6 @@ long_term_data/
 
 # wait to write
 Mamba.py
-# S4D.py
 
 # experiment ouputs
 graphs/
-
-# 数据文件
-/data/

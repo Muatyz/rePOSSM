@@ -6,11 +6,10 @@ import os
 from tqdm import tqdm
 
 # Import your existing modules
-from possm.config.Config import my_POSSMConfig
-from possm.models.Model import my_POSSM
-from possm.data.Dataloader import my_dataset, pad_collate_fn, get_inference_dataloader
+from models.build_model import build_model
+from data.Dataloader import my_dataset, pad_collate_fn, get_inference_dataloader
 from train.evaluate import evaluate_session
-from possm.utils.checkpoint import load_model_from_checkpoint
+from models.possm.utils.checkpoint import load_model_from_checkpoint
 
 
 def run_long_term_evaluation(
@@ -24,20 +23,22 @@ def run_long_term_evaluation(
     model_path = hyperparam["model_path"]
     
     print(f"Using device: {device}")
-     
-    # --- 2. Load Model ---
-    print(f"Loading model from {model_path}...")
-    model = my_POSSM(config, num_channel=96).to(device)
-
-    ckpt = torch.load(model_path, map_location=device)
-    model.load_state_dict(ckpt["model_state"])
     
-    # --- 3. Load Session 0 Metadata (Training Distribution) ---
+    # --- 2. Load Session 0 Metadata (Training Distribution) ---
     # We must use Session 0's Mean/Std to denormalize predictions 
     # because the model weights are fixed to that output distribution.
     meta_path_0 = os.path.join(processed_root, "session_0/meta_data.json")
     with open(meta_path_0, "r") as f:
         meta_0 = json.load(f)
+        
+    config.num_channel = meta_0["num_channel"]
+     
+    # --- 3. Load Model ---
+    print(f"Loading model from {model_path}...")
+    model = build_model(config).to(device)
+
+    ckpt = torch.load(model_path, map_location=device)
+    model.load_state_dict(ckpt["model_state"])
     
     # These tensors are used to denormalize the model output
     train_mean = torch.tensor(meta_0["vel_mean"], device=device, dtype=torch.float32)

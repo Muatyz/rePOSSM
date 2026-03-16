@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 from pathlib import Path
 
-from possm.utils.metrics import calculate_r2
+from models.possm.utils.metrics import calculate_r2
 
 @torch.no_grad()
 def evaluate_session(model, loader, device, config, train_mean, train_std):

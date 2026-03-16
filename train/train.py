@@ -2,13 +2,14 @@
 # 单独负责模型训练
 
 import torch
-from torch.utils.tensorboard import SummaryWriter
-from possm.data.Dataloader import get_dataloader
-from possm.models.Model import my_POSSM
-from train.engine import train_one_epoch, validate, masked_mse_loss
-from possm.utils.utils import set_seed, save_checkpoint
-from possm.config.Config import my_POSSMConfig
 import json
+from torch.utils.tensorboard import SummaryWriter
+
+from data.Dataloader import get_dataloader
+from train.engine import train_one_epoch, validate, masked_mse_loss
+
+from models.build_model import build_model
+from models.possm.utils.utils import set_seed, save_checkpoint
 
 def run_experiment(config, hyperparam, data_dir, meta_data_path):
     '''
@@ -22,21 +23,34 @@ def run_experiment(config, hyperparam, data_dir, meta_data_path):
     set_seed(hyperparam["seed"])
     
     model_path = hyperparam["model_path"]
+    
     meta_data = json.load(open(meta_data_path, "r"))
     num_channel = meta_data["num_channel"]
     
+    device = hyperparam["device"]
+    
+    # ======================
+    # Tensorboard
+    # ======================   
     writer = SummaryWriter(log_dir = f"{hyperparam['log_dir']}/{config.backbone}")
     
+    # ======================
+    # DataLoader
+    # ======================
     train_loader, valid_loader = get_dataloader(
         batch_size = hyperparam["batch_size"],
         data_dir = data_dir
     )
 
-    model = my_POSSM(
-        config, 
-        num_channel = num_channel
-        ).to(hyperparam["device"])
+    # ======================
+    # Build model
+    # ======================
+    config.num_channel = num_channel
+    model = build_model(config).to(device)
 
+    # ======================
+    # Optimizer
+    # ======================
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=hyperparam["learning_rate"],
@@ -47,7 +61,7 @@ def run_experiment(config, hyperparam, data_dir, meta_data_path):
     
     train_losses, val_losses = [], []
     
-    # 设定训练停止条件
+    # 设定训练早停法条件
     best_val_loss = float('inf')
     early_stopping_counter = 0
 
@@ -84,18 +98,5 @@ def run_experiment(config, hyperparam, data_dir, meta_data_path):
         if early_stopping_counter >= hyperparam['patience']:
             print(f"Early stopping triggered at epoch {epoch+1}!")
             break
+    writer.close()
     return train_losses, val_losses
-
-def build_model_and_dataloader(config, ckpt_path, device, batch_size, data_dir):
-    '''
-    工具函数, 用于快速使用 dataloader
-    '''
-    model = my_POSSM(config).to(device)
-
-    ckpt = torch.load(ckpt_path, map_location=device)
-    model.load_state_dict(ckpt["model_state"])
-    model.eval()
-
-    _, val_loader = get_dataloader(batch_size, data_dir)
-
-    return model, val_loader

@@ -1,13 +1,11 @@
 # engine.py
 # 纯粹的计算定义
 
-from possm.config.Config import my_POSSMConfig
-config = my_POSSMConfig()
+from configs.possm_config import POSSMConfig
+config = POSSMConfig()
 
 from tqdm import tqdm
 import torch
-
-
 
 def masked_mse_loss(output, target, lengths):
     """
