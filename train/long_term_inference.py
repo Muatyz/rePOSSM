@@ -10,6 +10,7 @@ from models.build_model import build_model
 from data.Dataloader import my_dataset, pad_collate_fn, get_inference_dataloader
 from train.evaluate import evaluate_session
 from models.possm.utils.checkpoint import load_model_from_checkpoint
+from scripts.visualize import collect_predictions, plot_prediction_vs_target
 
 
 def run_long_term_evaluation(
@@ -66,6 +67,26 @@ def run_long_term_evaluation(
         
         metrics = evaluate_session(model, loader, device, config, train_mean, train_std)
         
+        # # ===== 可视化（只挑几个 session）=====
+        # if session_id in [0, 3, 11]:   # ⭐ 你可以改
+        #     pred, target = collect_predictions(
+        #         model,
+        #         loader,
+        #         device,
+        #         train_mean,
+        #         train_std,
+        #         max_batches=1
+        #     )
+
+        #     fig_dir = os.path.join(os.getcwd(), "figures")
+        #     os.makedirs(fig_dir, exist_ok=True)
+
+        #     fig_path = os.path.join(fig_dir, f"session_{session_id}.png")
+
+        #     plot_prediction_vs_target(pred, target, session_id, fig_path)
+
+        #     print(f"[Saved plot] {fig_path}")
+        
         if metrics:
             print(f"R2: {metrics['avg_r2']:.4f} (MSE: {metrics['mse']:.4f})")
             results_summary.append({
@@ -82,6 +103,29 @@ def run_long_term_evaluation(
     for res in results_summary:
         print(f"{res['session']:<10} | {res['avg_r2']:<10.4f} | {res['r2_x']:<10.4f} | {res['r2_y']:<10.4f} | {res['mse']:<10.4f}")
     print("="*50)
+    
+    # --- 6. Save Results ---
+    results_dir = os.path.join(os.getcwd(), "results")
+    os.makedirs(results_dir, exist_ok=True)
+
+    # 从 config / hyperparam 解析信息
+    model_name = getattr(config, "model_type", "model")
+    backbone = getattr(config, "backbone", "unknown")
+    seed = getattr(config, "seed", "unknown")
+
+    # 兼容你现在 ckpt 命名（例如 possm_gru_seed42_xxx.pt）
+    if "model_path" in hyperparam:
+        ckpt_name = os.path.basename(hyperparam["model_path"]).replace(".pt", "")
+    else:
+        ckpt_name = f"{model_name}_{backbone}_seed{seed}"
+
+    save_path = os.path.join(results_dir, f"{ckpt_name}.json")
+
+    with open(save_path, "w") as f:
+        json.dump(results_summary, f, indent=4)
+
+    print(f"\nResults saved to: {save_path}")
+    
 
 if __name__ == "__main__":
     run_long_term_evaluation()

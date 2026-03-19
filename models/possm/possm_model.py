@@ -14,6 +14,7 @@ class POSSM_Model(nn.Module):
         初始化 POSSM_Model 模型
         '''
         super().__init__()
+        self.config = config
         # ===== consistency check =====
         if config.backbone == "gru":
             assert config.hidden_size == config.gru_hidden_size
@@ -67,6 +68,37 @@ class POSSM_Model(nn.Module):
         self.register_buffer("freqs_cos", freqs_cos)
         self.register_buffer("freqs_sin", freqs_sin)
         self.output_decoder = POSSMOutputDecoder(config)
+        
+    def align(self, outputs, target, vel_lens):
+        """
+        POSSM 时间对齐：
+        pred[t] 对应 vel[t + shift]
+        """
+        # ======================
+        # 1. 计算 shift
+        # ======================
+        shift = (self.config.k_history - 1) * self.config.bin_size
+
+        # ======================
+        # 2. 裁剪 target（去掉前面的未来窗口）
+        # ======================
+        target = target[:, shift:, :]
+
+        # ======================
+        # 3. 对齐长度（防止 mismatch）
+        # ======================
+        min_len = min(outputs.shape[1], target.shape[1])
+
+        outputs = outputs[:, :min_len, :]
+        target  = target[:, :min_len, :]
+
+        # ======================
+        # 4. 修正有效长度
+        # ======================
+        vel_lens = vel_lens - shift
+        vel_lens = torch.clamp(vel_lens, min=0, max=min_len)
+
+        return outputs, target, vel_lens
 
     def forward(self, spike, bin_mask, spike_mask):
         '''
@@ -88,9 +120,21 @@ class POSSM_Model(nn.Module):
         z = self.cross_attention(emb, offsets, spike_mask, self.freqs_cos, self.freqs_sin) # (batch_size, max_bin, num_latents, embed_dim)
         
         # 根据 config 内设定的 backbone 参数进行隐藏层的计算
-        B, T, L, D = z.shape
-        z = z.reshape(B, T, L * D)
+        # 为了确保 S4D 和 GRU 兼容使用同一个函数接口, 需要将 z 从 (B, T, L, D) reshape 成 (B, T, L*D)
+        batch_size, max_bin, num_latents, embed_dim = z.shape
+        z_flattened = z.view(batch_size, max_bin, -1)
+        print("z:", z.shape)
+        print("bin_mask:", bin_mask.shape)
         
-        h = self.backbone(z, bin_mask) # h: (batch_size, max_bin, hidden_dim)
+        h = self.backbone(z_flattened, bin_mask) # h: (batch_size, max_bin, hidden_dim)
         vel_pred = self.output_decoder(h, self.freqs_cos, self.freqs_sin) # (batch_size, (max_bin+k-1) * bin_size, 2)
+        
+        # 打印诊断信息
+        print("="*60)
+        print("Dimension info:")
+        print("spike:", spike.shape)
+        print("emb:", emb.shape)
+        print("z:", z.shape)
+        print("h:", h.shape)
+        print("vel_pred:", vel_pred.shape)
         return vel_pred

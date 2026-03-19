@@ -1,6 +1,8 @@
 # plot_loss.py
 # 用法: 
-# python plot_loss.py --ckpts checkpoints/possm_gru_seed42.pt checkpoints/possm_s4d_seed42.pt --out graphs/loss_compare.png
+# python plot_loss.py --ckpts /checkpoints/possm_gru_seed42.pt /checkpoints/possm_s4d_seed42.pt --out graphs/loss_compare.png
+
+
 
 import argparse
 from pathlib import Path

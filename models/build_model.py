@@ -2,6 +2,7 @@
 # 负责替代 train.py 中的模型构建部分, run_experiment() 应忽略模型内部结构的细节
 
 from models.possm.possm_model import POSSM_Model
+from models.rnn import RNNModel
 
 def build_model(config):
     """
@@ -26,11 +27,9 @@ def build_model(config):
 
         raise ValueError(f"Unsupported POSSM backbone: {backbone}")
 
-    # ======================
-    # RNN (future)
-    # ======================
     if model_type == "rnn":
-        raise NotImplementedError("RNN model not implemented yet")
+        num_channel = config.num_channel
+        return RNNModel(config, num_channel)
 
     # ======================
     # Transformer (future)

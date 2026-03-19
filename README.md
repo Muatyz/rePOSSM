@@ -25,9 +25,7 @@ python -m train.main --train --backbone gru
 ---
 
 ```python
-── 000128
-│   ├── dandiset.yaml
-│   └── sub-Jenkins
+.
 ├── README.md
 ├── __pycache__
 │   ├── Config.cpython-310.pyc
@@ -49,59 +47,110 @@ python -m train.main --train --backbone gru
 ├── attachment
 │   └── heatmap.png
 ├── checkpoints
-│   ├── possm_gru_seed42.pt
-│   └── possm_s4d_seed42.pt
+│   ├── possm_gru_seed42_52d102.pt
+│   ├── possm_gru_seed42_ed0336.pt
+│   └── possm_s4d_seed42_254f39.pt
+├── configs
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── __init__.cpython-39.pyc
+│   │   └── possm_config.cpython-39.pyc
+│   └── possm_config.py
 ├── data
+│   ├── Dataloader.py
+│   ├── __init__.py
+│   ├── __pycache__
+│   │   ├── Dataloader.cpython-39.pyc
+│   │   └── __init__.cpython-39.pyc
+│   ├── dataset
+│   │   ├── 000128
+│   │   ├── long_term_data
+│   │   └── processed_data
+│   ├── preprocess.py
+│   └── preprocess_long_term.py
 ├── dataset_mc_maze.ipynb
-├── eval
-│   └── gru_seed42
 ├── graphs
 │   ├── loss_comparison.png
 │   └── s4d_loss.png
 ├── log
-│   ├── events.out.tfevents.1767787340.Dominant.3886.0
-│   ├── events.out.tfevents.1767787903.Dominant.5215.0
-│   ├── events.out.tfevents.1768638415.Dominant.2466.0
-│   ├── gru
-│   └── s4d
-├── long_term_data
-│   ├── Chewie_CO_2016
-│   └── Chewie_processed
 ├── long_term_log
-│   └── gru
-├── long_term_model_gru.pth
-├── possm
+│   └── possm
+│       ├── gru
+│       └── s4d
+├── main.py
+├── models
 │   ├── __init__.py
 │   ├── __pycache__
-│   ├── config
-│   ├── data
-│   ├── models
+│   │   ├── __init__.cpython-39.pyc
+│   │   └── build_model.cpython-39.pyc
+│   ├── build_model.py
+│   ├── possm
+│   │   ├── Output_Decoder.py
+│   │   ├── RoPE.py
+│   │   ├── __init__.py
+│   │   ├── __pycache__
+│   │   ├── backbones
+│   │   ├── cross_attention.py
+│   │   ├── possm_model.py
+│   │   └── utils
+│   └── rnn.py
+├── possm
 │   └── utils
-├── processed_data
-│   ├── meta_data.json
-│   └── sliced_trials.pt
+│       ├── checkpoint.py
+│       ├── metrics.py
+│       └── utils.py
 ├── pyproject.toml
 ├── requirements.txt
 ├── s4_test
 │   ├── __pycache__
+│   │   ├── data.cpython-39.pyc
+│   │   └── model.cpython-39.pyc
 │   ├── data.py
 │   ├── model.py
 │   ├── s4_toy.py
 │   ├── state-spaces
+│   │   ├── CHANGELOG.md
+│   │   ├── LICENSE
+│   │   ├── Makefile
+│   │   ├── README.md
+│   │   ├── assets
+│   │   ├── checkpoints
+│   │   ├── configs
+│   │   ├── example.py
+│   │   ├── extensions
+│   │   ├── generate.py
+│   │   ├── models
+│   │   ├── notebooks
+│   │   ├── requirements-dev.txt
+│   │   ├── requirements.txt
+│   │   ├── setup.py
+│   │   ├── src
+│   │   ├── state_spaces_s4.egg-info
+│   │   └── train.py
 │   ├── state_spaces_s4.egg-info
+│   │   ├── PKG-INFO
+│   │   ├── SOURCES.txt
+│   │   ├── dependency_links.txt
+│   │   └── top_level.txt
 │   └── train.py
 ├── scripts
 │   ├── __pycache__
+│   │   └── plotting.cpython-39.pyc
 │   ├── plot_loss.py
 │   └── plotting.py
 ├── test.ipynb
 ├── train
+│   ├── __init__.py
 │   ├── __pycache__
+│   │   ├── __init__.cpython-39.pyc
+│   │   ├── engine.cpython-39.pyc
+│   │   ├── evaluate.cpython-39.pyc
+│   │   ├── long_term_inference.cpython-39.pyc
+│   │   ├── main.cpython-39.pyc
+│   │   └── train.cpython-39.pyc
 │   ├── engine.py
 │   ├── evaluate.py
 │   ├── long_term_inference.py
-│   ├── long_term_main.py
-│   ├── main.py
 │   └── train.py
 └── uv.lock
 ```

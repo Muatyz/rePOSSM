@@ -46,7 +46,7 @@ def run_experiment(config, hyperparam, data_dir, meta_data_path):
     # Build model
     # ======================
     config.num_channel = num_channel
-    model = build_model(config).to(device)
+    model = build_model(config).to(device) # 根据命令行中
 
     # ======================
     # Optimizer

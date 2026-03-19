@@ -2,8 +2,10 @@
 # 省略实验细节, 只进行宏观函数使用
 
 # 等待完成: 
-# 未来命令设计: python main.py --train --model possm --backbone gru
+# 训练: python main.py --train --model possm --backbone gru
+# 评估: python main.py --eval --model possm --backbone gru --ckpt 059b9e
 # 以及作为 baseline 的命令: python main.py --train --model rnn
+# 绘图比较: python scripts/plot_compare.py
 
 import torch
 import argparse # 命令行参数
@@ -12,6 +14,7 @@ import hashlib
 import time
 
 from configs.possm_config import POSSMConfig
+from configs.rnn_config import RNNConfig
 from train.train import run_experiment
 from train.long_term_inference import run_long_term_evaluation
 
@@ -25,13 +28,25 @@ from scripts.plotting import (
 # ======================
 ROOT = Path(__file__).resolve().parent
 
-DATA_ROOT = ROOT / "data/dataset/long_term_data/Chewie_processed"
-CHECKPOINT_DIR = ROOT / "checkpoints" # 模型权重保存路径
+ROOT = Path(__file__).resolve().parent
+
+DATA_BASE = ROOT / "data/dataset/long_term_data"
+
+CHECKPOINT_DIR = ROOT / "checkpoints"
 LOG_DIR = ROOT / "long_term_log"
 
-# 自动创建目录
-CHECKPOINT_DIR.mkdir(exist_ok=True)
-LOG_DIR.mkdir(exist_ok=True)
+def get_data_root(model_type):
+    '''
+    根据 model 的类型选择合适的数据处理方式
+    POSSM: 切割数据为 sparse token
+    RNN: 切割数据为 dense token
+    '''
+    if model_type == "possm":
+        return DATA_BASE / "Chewie_possm_processed"
+    elif model_type == "rnn":
+        return DATA_BASE / "Chewie_rnn_processed"
+    else:
+        raise ValueError(f"Unknown model_type: {model_type}")
 
 # ======================
 # Build config
@@ -47,7 +62,10 @@ def build_config(args):
         return config
 
     if args.model == "rnn":
-        return None # 等待完善
+        config = RNNConfig()
+        config.model = "rnn"
+        config.backbone = "rnn"
+        return config
 
     if args.model == "transformer":
         return None # 等待完善
@@ -96,6 +114,9 @@ def main():
     args = parser.parse_args()
     if not args.train and not args.eval:
         raise ValueError("Please specify --train or --eval") # 只能指定 train 或 eval 中的一个
+    
+    # 确定数据路径
+    DATA_ROOT = get_data_root(args.model)
     
     # ======================
     # Build config
