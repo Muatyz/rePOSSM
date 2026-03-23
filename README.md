@@ -1,8 +1,38 @@
+事先声明: 
+
+- 该代码库源自 [Generalizable, real-time neural decoding with hybrid state-space models](https://arxiv.org/pdf/2506.05320), 并且由 [freesky3](https://github.com/freesky3/my_POSSM) 首次实现, 该 fork 库进行了个人的改动. 
+- 本代码在 Linux 系统上运行. 对于 Windows 系统, 可启用 [WSL2](https://learn.microsoft.com/zh-cn/windows/wsl/install). 
+
+# 1. 下载代码库
+
+```bash
+git clone https://github.com/Muatyz/rePOSSM.git
+cd rePOSSM
+```
+
+# 2. 更新 conda
+
+```bash
+conda update -n base -c defaults conda
+```
+
+# 3. 创建环境
+
+```bash
+conda env create -f environment.yml
+```
+
+# 4. 激活环境
+
+```bash
+conda activate possm
+```
+
+# 5. 下载数据
+
 数据来源：[NLB_maze](https://neurallatents.github.io/datasets.html)
 
 数据格式：[Notebook](https://github.com/neurallatents/neurallatents.github.io/blob/master/notebooks/mc_maze.ipynb)
-
-stardard数据下载:
 
 ```
 dandi download DANDI:000128/0.220113.0400
@@ -14,212 +44,54 @@ dandi download DANDI:000128/0.220113.0400
 
 示例代码使用的是 `Chewie_CO_2016.7z` 数据集. 
 
+数据位于 `data/dataset/` 目录下
+
+# 6. 训练模型
+
 在根目录下, 执行 
 
-```
-python -m train.main --train --backbone gru
-```
-
-即通过 `train.main` 模块, 以 `gru` 作为 backbone 进行训练.
-
----
-
-```python
-.
-├── README.md
-├── __pycache__
-│   ├── Config.cpython-310.pyc
-│   ├── Config.cpython-39.pyc
-│   ├── Cross_Attention.cpython-39.pyc
-│   ├── Dataloader.cpython-310.pyc
-│   ├── Dataloader.cpython-39.pyc
-│   ├── GRU.cpython-39.pyc
-│   ├── Model.cpython-39.pyc
-│   ├── Output_Decoder.cpython-39.pyc
-│   ├── RoPE.cpython-39.pyc
-│   ├── S4D.cpython-39.pyc
-│   ├── engine.cpython-39.pyc
-│   ├── evaluate.cpython-39.pyc
-│   ├── metrics.cpython-39.pyc
-│   ├── plotting.cpython-39.pyc
-│   ├── train.cpython-39.pyc
-│   └── utils.cpython-39.pyc
-├── attachment
-│   └── heatmap.png
-├── checkpoints
-│   ├── possm_gru_seed42_52d102.pt
-│   ├── possm_gru_seed42_ed0336.pt
-│   └── possm_s4d_seed42_254f39.pt
-├── configs
-│   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-39.pyc
-│   │   └── possm_config.cpython-39.pyc
-│   └── possm_config.py
-├── data
-│   ├── Dataloader.py
-│   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── Dataloader.cpython-39.pyc
-│   │   └── __init__.cpython-39.pyc
-│   ├── dataset
-│   │   ├── 000128
-│   │   ├── long_term_data
-│   │   └── processed_data
-│   ├── preprocess.py
-│   └── preprocess_long_term.py
-├── dataset_mc_maze.ipynb
-├── graphs
-│   ├── loss_comparison.png
-│   └── s4d_loss.png
-├── log
-├── long_term_log
-│   └── possm
-│       ├── gru
-│       └── s4d
-├── main.py
-├── models
-│   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-39.pyc
-│   │   └── build_model.cpython-39.pyc
-│   ├── build_model.py
-│   ├── possm
-│   │   ├── Output_Decoder.py
-│   │   ├── RoPE.py
-│   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   ├── backbones
-│   │   ├── cross_attention.py
-│   │   ├── possm_model.py
-│   │   └── utils
-│   └── rnn.py
-├── possm
-│   └── utils
-│       ├── checkpoint.py
-│       ├── metrics.py
-│       └── utils.py
-├── pyproject.toml
-├── requirements.txt
-├── s4_test
-│   ├── __pycache__
-│   │   ├── data.cpython-39.pyc
-│   │   └── model.cpython-39.pyc
-│   ├── data.py
-│   ├── model.py
-│   ├── s4_toy.py
-│   ├── state-spaces
-│   │   ├── CHANGELOG.md
-│   │   ├── LICENSE
-│   │   ├── Makefile
-│   │   ├── README.md
-│   │   ├── assets
-│   │   ├── checkpoints
-│   │   ├── configs
-│   │   ├── example.py
-│   │   ├── extensions
-│   │   ├── generate.py
-│   │   ├── models
-│   │   ├── notebooks
-│   │   ├── requirements-dev.txt
-│   │   ├── requirements.txt
-│   │   ├── setup.py
-│   │   ├── src
-│   │   ├── state_spaces_s4.egg-info
-│   │   └── train.py
-│   ├── state_spaces_s4.egg-info
-│   │   ├── PKG-INFO
-│   │   ├── SOURCES.txt
-│   │   ├── dependency_links.txt
-│   │   └── top_level.txt
-│   └── train.py
-├── scripts
-│   ├── __pycache__
-│   │   └── plotting.cpython-39.pyc
-│   ├── plot_loss.py
-│   └── plotting.py
-├── test.ipynb
-├── train
-│   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-39.pyc
-│   │   ├── engine.cpython-39.pyc
-│   │   ├── evaluate.cpython-39.pyc
-│   │   ├── long_term_inference.cpython-39.pyc
-│   │   ├── main.cpython-39.pyc
-│   │   └── train.cpython-39.pyc
-│   ├── engine.py
-│   ├── evaluate.py
-│   ├── long_term_inference.py
-│   └── train.py
-└── uv.lock
+```bash
+python main.py --train --model possm --backbone gru
 ```
 
-长期数据评估结果: 
+通过 `--train` 参数指定训练, `--model` 参数指定模型, `--backbone` 参数指定骨干网络(`gru` 或者 `s4d`).
+
+也可通过以下指令完成 baseline 模型的训练: 
 
 ```bash
-(possm) hyc@Dominant:/mnt/d/codefiles/python/myPOSSM/rePOSSM$ python -m train.main --eval --backbone gru
-============================================================
-Running POSSM with backbone = gru
-Model is saved at: ./checkpoints/long_term_model_gru.pt
-============================================================
-Using device: cuda
-Loading model from ./checkpoints/long_term_model_gru.pt...
-Training Baseline (Session 0) Loaded.
---------------------------------------------------
-Evaluating Session 0... R2: 0.0687 (MSE: 0.0640)
-Evaluating Session 1... R2: 0.0416 (MSE: 0.0457)
-Evaluating Session 2... R2: 0.0474 (MSE: 0.0458)
-Evaluating Session 3... R2: -0.0119 (MSE: 0.0666)
-Evaluating Session 4... R2: 0.0604 (MSE: 0.0488)
-Evaluating Session 7... R2: 0.0341 (MSE: 0.0486)
-Evaluating Session 11... R2: 0.0361 (MSE: 0.0527)
-
-==================================================
-Session    | R2 (Avg)   | R2 (X)     | R2 (Y)     | MSE       
---------------------------------------------------
-0          | 0.0687     | -0.0037    | 0.1412     | 0.0640    
-1          | 0.0416     | -0.0009    | 0.0840     | 0.0457    
-2          | 0.0474     | -0.0011    | 0.0959     | 0.0458    
-3          | -0.0119    | 0.0001     | -0.0238    | 0.0666    
-4          | 0.0604     | 0.0078     | 0.1129     | 0.0488    
-7          | 0.0341     | -0.0001    | 0.0683     | 0.0486    
-11         | 0.0361     | 0.0037     | 0.0685     | 0.0527    
-==================================================
+python main.py --train --model rnn --backbone rnn
 ```
+
+训练后的模型权重将以 `.pt` 保存在 `checkpoints/` 目录下.
+
+# 7. 评估模型
+
+在根目录下, 执行 
 
 ```bash
-(possm) hyc@Dominant:/mnt/d/codefiles/python/myPOSSM/rePOSSM$ python -m train.main --eval --backbone s4d
-============================================================
-Running POSSM with backbone = s4d
-Model is saved at: ./checkpoints/long_term_model_s4d.pt
-============================================================
-Using device: cuda
-Loading model from ./checkpoints/long_term_model_s4d.pt...
-Training Baseline (Session 0) Loaded.
---------------------------------------------------
-Evaluating Session 0... R2: 0.3388 (MSE: 0.0469)
-Evaluating Session 1... R2: 0.1464 (MSE: 0.0404)
-Evaluating Session 2... R2: -0.0129 (MSE: 0.0495)
-Evaluating Session 3... R2: 0.0188 (MSE: 0.0671)
-Evaluating Session 4... R2: -1.3658 (MSE: 0.1198)
-Evaluating Session 7... R2: 0.0684 (MSE: 0.0471)
-Evaluating Session 11... R2: -2.3554 (MSE: 0.1833)
-
-==================================================
-Session    | R2 (Avg)   | R2 (X)     | R2 (Y)     | MSE       
---------------------------------------------------
-0          | 0.3388     | 0.2287     | 0.4489     | 0.0469    
-1          | 0.1464     | 0.1703     | 0.1225     | 0.0404    
-2          | -0.0129    | -0.2974    | 0.2717     | 0.0495    
-3          | 0.0188     | -0.1006    | 0.1381     | 0.0671    
-4          | -1.3658    | -0.8307    | -1.9008    | 0.1198    
-7          | 0.0684     | -0.0101    | 0.1469     | 0.0471    
-11         | -2.3554    | -2.4705    | -2.2404    | 0.1833    
-==================================================
+python main.py --eval --model possm --backbone gru --ckpt 059b9e
 ```
 
+通过 `--eval` 参数指定评估, `--model` 参数指定模型, `--backbone` 参数指定骨干网络(`gru` 或者 `s4d`), `--ckpt` 参数指定要加载的模型六位码. 
 
+评估结果将以 `.json` 保存在 `results/` 目录下.
 
-1. 数据集
-2. RNN 等架构的性能对比.
+# 8. 可视化结果
+
+在根目录下, 执行 
+
+```bash
+python scripts/plot_compare.py
+```
+
+将自动读取 `results/` 目录下的评估结果, 并生成 $R^{2}$ 比较图. 
+
+![](figures/r2_comparison.png)
+
+# Todo
+
+- [x] RNN baseline 的实现
+
+- [ ] velocity prediction & 实际数据的画图对比
+
+- [ ] Transformer baseline 的实现

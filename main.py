@@ -1,7 +1,6 @@
 # main.py
 # 省略实验细节, 只进行宏观函数使用
 
-# 等待完成: 
 # 训练: python main.py --train --model possm --backbone gru
 # 评估: python main.py --eval --model possm --backbone gru --ckpt 059b9e
 # 以及作为 baseline 的命令: python main.py --train --model rnn
